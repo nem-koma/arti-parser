@@ -1,0 +1,5 @@
+** usage
+convert to HTML:
+#+BEGIN_SRC shell
+# cat textfile | ./parser
+#+END_SRC
