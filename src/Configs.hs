@@ -3,6 +3,7 @@ module Configs where
 import Data.List
 import Data.Maybe
 import Text.Regex.PCRE
+import Data.ByteString.Lazy.UTF8 (fromString, toString, ByteString)
 
 -- 一致する構文を適用していくので、一致するかは判別する必要がある fst syntaxes_defを再利用する
 syntax_mapping :: [(String, (String -> String))] -> String -> String
@@ -46,7 +47,10 @@ inlines regex (s, e) str
 	| str       == [] = ""
 	| ms        == [] = b ++ a
 	| otherwise       = b ++ s ++ (head ms) ++ e ++ inlines regex (s, e) a
-	where (b,m,a,ms)  = regex /=/ str :: (String,String,String,[String])
+	where (b',m',a',ms')  = regex /=/ (fromString str) :: (ByteString,ByteString,ByteString,[ByteString])
+	      (b,m,a,ms) = (toString b', toString m', toString a', map toString ms')
+-- regex-pcreにはバグがあり、マルチバイト文字がズレる パッチはあるが不完全なうえ古い
+-- ByteStringを経由する事で回避する TODO::最終的にプログラム全体をByteStringで処理するように変更する
 
 -- 適用する関数群の定義と適用
 empty_line :: String -> String -> String
@@ -69,5 +73,16 @@ hyperlink reg str = tag
 
 source_node :: String -> String -> String
 source_node reg str = tag
-	where   (_,_,_,(l:code:_)) = reg /=/ str :: (String,String,String,[String])
-		tag                  = intercalate "\n" ["<pre><code>", code, "</code></pre>"]
+	where   (_,_,_,(a:code:_)) = reg /=/ str :: (String,String,String,[String])
+		attrs              = [ "<span>" ++ s ++ "</span>" | s <- fragments ',' a]
+		attrs'             = "<div>" ++ foldr (++) "</div>" attrs
+		tag                = intercalate "" ["<pre>", attrs', "<code>", code, "</code></pre>"]
+
+
+
+fragments         :: Eq a => a -> [a] -> [[a]]
+fragments del str = cons (case break (== del) str of
+	(left, str') -> (left, case str' of
+		[]       -> []
+		_:str''  -> fragments del str''))
+	where cons ~(h, t) = h : t
