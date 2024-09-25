@@ -3,6 +3,7 @@ module Configs where
 import Data.List
 import Data.Maybe
 import Text.Regex.PCRE
+import Data.ByteString.Lazy.UTF8 (fromString, toString, ByteString)
 
 -- 一致する構文を適用していくので、一致するかは判別する必要がある fst syntaxes_defを再利用する
 syntax_mapping :: [(String, (String -> String))] -> String -> String
@@ -21,7 +22,11 @@ syntax_mapping synmap str
 syntaxes_def :: [(String, (String -> String))]
 syntaxes_def =  [ (r, f r)
 		| (r, f) <- [ ("^(={1,5})[ \n](.*)$",                   heading)
+<<<<<<< HEAD
 			    , ("^link:\\[(.*?)\\]\\[(.*?)\\]$",         hyperlink)
+=======
+			    , ("^link:\\[(.*?)\\]\\[(.*?)\\]$",     hyperlink)
+>>>>>>> 2efc570
 			    , ("^\\[src\\]\\[(.*?)\\]([\\s\\S]*)$",     source_node)
 			    , ("^$",                                    empty_line)]]
 
@@ -46,7 +51,10 @@ inlines regex (s, e) str
 	| str       == [] = ""
 	| ms        == [] = b ++ a
 	| otherwise       = b ++ s ++ (head ms) ++ e ++ inlines regex (s, e) a
-	where (b,m,a,ms)  = regex /=/ str :: (String,String,String,[String])
+	where (b',m',a',ms')  = regex /=/ (fromString str) :: (ByteString,ByteString,ByteString,[ByteString])
+	      (b,m,a,ms) = (toString b', toString m', toString a', map toString ms')
+-- regex-pcreにはバグがあり、マルチバイト文字がズレる パッチはあるが不完全なうえ古い
+-- ByteStringを経由する事で回避する TODO::最終的にプログラム全体をByteStringで処理するように変更する
 
 -- 適用する関数群の定義と適用
 empty_line :: String -> String -> String
@@ -64,8 +72,8 @@ heading reg str = intercalate ss tag
 
 hyperlink :: String -> String -> String
 hyperlink reg str = tag
-	where   (_,_,_,(text:link:_)) = reg /=/ str :: (String,String,String,[String])
-		tag                   = "<a href='" ++ link ++ "'>" ++ text ++ "</a>"
+	where   (_,_,_,(text:link:_)) = reg /=/ (fromString str) :: (ByteString,ByteString,ByteString,[ByteString])
+		tag                   = "<a href='" ++ (toString link) ++ "'>" ++ (toString text) ++ "</a>"
 
 source_node :: String -> String -> String
 source_node reg str = tag
