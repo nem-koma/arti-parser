@@ -1,0 +1,18 @@
+通常のテキスト
+
+====[[src][haskell,hello.hs]]
+main = print "hello, world"
+====
+
+====[[src][shell,root,ghci]]
+$ ghci hello.hs
+ghci> main
+"hello, world"
+====
+
+==[[src][shell,root,ghci]]==
+$ ghci
+ghci> :load hello.hs
+ghci> main
+"hello, world"
+====

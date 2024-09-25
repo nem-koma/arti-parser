@@ -21,14 +21,14 @@ syntax_mapping synmap str
 syntaxes_def :: [(String, (String -> String))]
 syntaxes_def =  [ (r, f r)
 		| (r, f) <- [ ("^(={1,5})[ \n](.*)$",                   heading)
-			    , ("^link:\\[\\[(.*?)\\]\\[(.*?)\\]\\]$",   hyperlink)
-			    , ("^\\[src\\]\\[(.*?)\\]\\s([\\s\\S]*)",   source_node)
+			    , ("^link:\\[(.*?)\\]\\[(\\s\\S?)\\]$",     hyperlink)
+			    , ("^\\[src\\]\\[(.*?)\\]([\\s\\S]*)$",     source_node)
 			    , ("^$",                                    empty_line)]]
 
 -- (start,end)
 bsyntaxes_def :: [(String, String)]
-bsyntaxes_def = [ (("^----$"),                  ("^----$"))
-		, (("^====$|^====\\[(.*)\\]$"), ("^====$"))
+bsyntaxes_def = [ (("^====$|^====\\[(.*)\\]$"), ("^====$"))
+		, (("^====$|^==\\[(.*)\\]==$"), ("^====$"))
 		, (("^____$|^____(.*)$"),       ("^____$"))]
 
 inlines_apply :: String -> String
@@ -69,5 +69,14 @@ hyperlink reg str = tag
 
 source_node :: String -> String -> String
 source_node reg str = tag
-	where   (_,_,_,(l:code:_)) = reg /=/ str :: (String,String,String,[String])
-		tag                  = intercalate "\n" ["<pre><code>", code, "</code></pre>"]
+	where   (_,_,_,(a:code:_)) = reg /=/ str :: (String,String,String,[String])
+		attrs              = [ "<span>" ++ s ++ "</span>" | s <- fragments ',' a]
+		attrs'             = "<div>" ++ foldr (++) "</div>" attrs
+		tag                = intercalate "" ["<pre>", attrs', "<code>", code, "</code></pre>"]
+
+fragments         :: Eq a => a -> [a] -> [[a]]
+fragments del str = cons (case break (== del) str of
+	(left, str') -> (left, case str' of
+		[]       -> []
+		_:str''  -> fragments del str''))
+	where cons ~(h, t) = h : t

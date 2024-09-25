@@ -4,14 +4,6 @@ import Data.Maybe
 
 import Configs
 
--- lines :: String -> [String]の抽象
-fragments         :: Eq a => a -> [a] -> [[a]]
-fragments del str = cons (case break (== del) str of
-	(left, str') -> (left, case str' of
-		[]       -> []
-		_:str''  -> fragments del str''))
-	where cons ~(h, t) = h : t
-
 -- いずれかの構文である (第一引数の関数群のすくなくとも一つが真を返す)
 is_any :: [String -> Bool] -> String -> Bool
 is_any syntaxes str = any ($ str) syntaxes
