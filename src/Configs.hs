@@ -22,14 +22,14 @@ syntax_mapping synmap str
 syntaxes_def :: [(String, (String -> String))]
 syntaxes_def =  [ (r, f r)
 		| (r, f) <- [ ("^(={1,5})[ \n](.*)$",                   heading)
-			    , ("^link:\\[\\[(.*?)\\]\\[(.*?)\\]\\]$",   hyperlink)
-			    , ("^\\[src\\]\\[(.*?)\\]\\s([\\s\\S]*)",   source_node)
+			    , ("^link:\\[(.*?)\\]\\[(\\s\\S?)\\]$",     hyperlink)
+			    , ("^\\[src\\]\\[(.*?)\\]([\\s\\S]*)$",     source_node)
 			    , ("^$",                                    empty_line)]]
 
 -- (start,end)
 bsyntaxes_def :: [(String, String)]
-bsyntaxes_def = [ (("^----$"),                  ("^----$"))
-		, (("^====$|^====\\[(.*)\\]$"), ("^====$"))
+bsyntaxes_ ("^====$"))
+		, (("^====$|^==\\[(.*)\\]==$"), ("^====$"))
 		, (("^____$|^____(.*)$"),       ("^____$"))]
 
 inlines_apply :: String -> String
@@ -77,8 +77,6 @@ source_node reg str = tag
 		attrs              = [ "<span>" ++ s ++ "</span>" | s <- fragments ',' a]
 		attrs'             = "<div>" ++ foldr (++) "</div>" attrs
 		tag                = intercalate "" ["<pre>", attrs', "<code>", code, "</code></pre>"]
-
-
 
 fragments         :: Eq a => a -> [a] -> [[a]]
 fragments del str = cons (case break (== del) str of
