@@ -22,11 +22,7 @@ syntax_mapping synmap str
 syntaxes_def :: [(String, (String -> String))]
 syntaxes_def =  [ (r, f r)
 		| (r, f) <- [ ("^(={1,5})[ \n](.*)$",                   heading)
-<<<<<<< HEAD
 			    , ("^link:\\[(.*?)\\]\\[(.*?)\\]$",         hyperlink)
-=======
-			    , ("^link:\\[(.*?)\\]\\[(.*?)\\]$",     hyperlink)
->>>>>>> 2efc570
 			    , ("^\\[src\\]\\[(.*?)\\]([\\s\\S]*)$",     source_node)
 			    , ("^$",                                    empty_line)]]
 
